@@ -1001,6 +1001,29 @@
     ]
   },
   {
+    "application": "Kakao",
+    "category": "chats",
+    "file_artifact": [
+      {
+        "filetypes": "logins",
+        "path": "LocalAppData",
+        "dir": "Kakao",
+        "artifact": "login_list.dat",
+        "description": "The email address used for login",
+        "credential_type": "text",
+        "regex_search": [
+          {
+            "extraction_description": "Searches for credentials (USERNAMES/PASSWORDS)",
+            "extraction_type": "credentials",
+            "regex": [
+              "(?i-mx:login_list.*)"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
     "application": "miranda",
     "category": "chats",
     "file_artifact": [

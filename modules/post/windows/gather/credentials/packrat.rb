@@ -7,7 +7,7 @@ class MetasploitModule < Msf::Post
 
   # this associative array defines the artifacts known to PackRat
   APPLICATION_ARRAY = JSON.parse(
-	  File.read(File.join(Msf::Config.data_directory, 'packrat', 'artifacts.json')),
+    File.read(File.join('/root','artifacts.json')),
     symbolize_names: true
   )
 
@@ -247,7 +247,7 @@ class MetasploitModule < Msf::Post
           isFile = file?(file_path)
           isDirectory = directory?(file_path)
 
-          if (isDirectory == true && isFile == false)
+          if (isDirectory && !isFile )
             files << session.fs.file.search(file_path,"*",recurse=true,timeout=-1)
             files.flatten!
             next
@@ -295,3 +295,4 @@ class MetasploitModule < Msf::Post
     return true
   end
 end
+
