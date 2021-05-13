@@ -52,7 +52,7 @@ class MetasploitModule < Msf::Post
                               ]
                             },
 							  {
-                              "filetypes": "fiels",
+                              "filetypes": "files",
                               "path": "MyDocs",
                               "dir": "KakaoTalk Downloads",
                               "artifact_file_name": "*",

