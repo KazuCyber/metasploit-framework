@@ -58,8 +58,10 @@ class MetasploitModule < Msf::Auxiliary
   def session_setup(result, scanner)
     return unless scanner.ssh_socket
 
+    platform = scanner.get_platform(result.proof)
+
     # Create a new session
-    conn = Net::SSH::CommandStream.new(scanner.ssh_socket)
+    sess = Msf::Sessions::SshCommandShellBind.new(scanner.ssh_socket)
 
     merge_me = {
       'USERPASS_FILE' => nil,
@@ -68,12 +70,12 @@ class MetasploitModule < Msf::Auxiliary
       'USERNAME'      => result.credential.public,
       'PASSWORD'      => result.credential.private
     }
-    info = "#{proto_from_fullname} #{result.credential} (#{@ip}:#{rport})"
-    s = start_session(self, info, merge_me, false, conn.lsock)
+    info = "#{proto_from_fullname} #{result.credential} (#{ Rex::Socket.is_ipv6?(@ip) ? '[' + @ip + ']' : @ip }:#{rport})"
+    s = start_session(self, info, merge_me, false, sess.rstream, sess)
     self.sockets.delete(scanner.ssh_socket.transport.socket)
 
     # Set the session platform
-    s.platform = scanner.get_platform(result.proof)
+    s.platform = platform
 
     # Create database host information
     host_info = {host: scanner.host}
@@ -90,6 +92,7 @@ class MetasploitModule < Msf::Auxiliary
 
   def run_host(ip)
     @ip = ip
+    print_brute :ip => ip, :msg => "Starting bruteforce"
 
     cred_collection = Metasploit::Framework::CredentialCollection.new(
       blank_passwords: datastore['BLANK_PASSWORDS'],

@@ -29,7 +29,7 @@ module Auxiliary::CommandShell
   end
 
 
-  def start_session(obj, info, ds_merge, crlf = false, sock = nil)
+  def start_session(obj, info, ds_merge, crlf = false, sock = nil, sess = nil)
     if crlf
       # Windows telnet server requires \r\n line endings and it doesn't
       # seem to affect anything else.
@@ -37,7 +37,7 @@ module Auxiliary::CommandShell
     end
 
     sock ||= obj.sock
-    sess = Msf::Sessions::CommandShell.new(sock)
+    sess ||= Msf::Sessions::CommandShell.new(sock)
     sess.set_from_exploit(obj)
     sess.info = info
 
@@ -50,6 +50,15 @@ module Auxiliary::CommandShell
 
     framework.sessions.register(sess)
     sess.process_autoruns(datastore)
+
+    # Notify the framework that we have a new session opening up...
+    # Don't let errant event handlers kill our session
+    begin
+      framework.events.on_session_open(sess)
+    rescue ::Exception => e
+      wlog("Exception in on_session_open event handler: #{e.class}: #{e}")
+      wlog("Call Stack\n#{e.backtrace.join("\n")}")
+    end
 
     sess
   end
